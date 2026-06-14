@@ -1,0 +1,40 @@
+services:
+  mongo:
+    image: mongo:7.0
+    container_name: nexus-mongo
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nexus-backend
+    ports:
+      - '5000:5000'
+    environment:
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/nexus-cognitive-new
+      JWT_SECRET: ${JWT_SECRET}
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+    depends_on:
+      - mongo
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nexus-frontend
+    ports:
+      - '5173:5173'
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:5000}
+    depends_on:
+      - backend
+
+volumes:
+  mongo_data:
+    name: nexus-mongo-data
